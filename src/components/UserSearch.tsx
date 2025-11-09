@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { fetchGithubUser } from "../api/github";
+import UserCard from "./UserCard";
 
 const UserSearch = () => {
   const [username, setUsername] = useState("");
@@ -7,21 +9,11 @@ const UserSearch = () => {
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["users", submittedUsername],
-    queryFn: async () => {
-      const res = await fetch(
-        `${import.meta.env.VITE_GITHUB_API_URL}/users/${submittedUsername}`
-      );
-
-      if (!res.ok) throw new Error("User not found");
-
-      const data = await res.json();
-
-      return data;
-    },
+    queryFn: () => fetchGithubUser(submittedUsername),
     enabled: !!submittedUsername,
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmittedUsername(username.trim());
   };
@@ -40,11 +32,7 @@ const UserSearch = () => {
       {isLoading && <p className="status">Loading...</p>}
       {isError && <p className="status error">{error.message}</p>}
 
-      {data && (
-        <div className="user-card">
-          <img src={data.avatar_url} alt={data.name} className="avatar" />
-        </div>
-      )}
+      {data && <UserCard user={data} />}
     </>
   );
 };
